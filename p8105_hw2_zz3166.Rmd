@@ -170,6 +170,9 @@ total_cig_butts_gwynnda
 "The combined dataset has `r nrow(Combined_Trashwheel)` observations. It includes key variables like total weight of trash (`weight_tons`), number of plastic bottles (`plastic_bottles`), and cigarette butts (`cigarette_butts`). The total weight of trash collected by Professor Trash Wheel is `r format(total_weight_professor$Total_Weight_Tons, scientific = FALSE)` tons. Gwynnda collected `r format(total_cig_butts_gwynnda$Total_Cigarette_Butts, scientific = FALSE)` cigarette butts in June 2022."
 
 
+### Problem 3
+
+
 
 
 
