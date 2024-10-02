@@ -15,6 +15,7 @@ knitr::opts_chunk$set(echo = TRUE)
 ```{r load_libraries}
 library(tidyverse)
 library(readxl)
+library(dplyr)
 ```
 
 ### Problem 1
@@ -171,6 +172,44 @@ total_cig_butts_gwynnda
 
 
 ### Problem 3
+
+```{r}
+# Import and Clean bakers.csv:
+bakers <- read_csv("data/bakers.csv") %>%
+  janitor::clean_names()
+
+# Check the data structure
+glimpse(bakers)
+
+#Import and Clean bakes.csv:
+bakes <- read_csv("data/bakes.csv") %>%
+  janitor::clean_names()
+
+# Check the data structure
+glimpse(bakes)
+
+#import and Clean results.csv:
+results <- read_csv("data/results.csv") %>%
+  janitor::clean_names()
+
+# Check the data structure
+glimpse(results)
+
+#Import and Clean viewers.csv:
+viewers <- read_csv("data/viewers.csv") %>%
+  janitor::clean_names()
+
+# Check the data structure
+glimpse(viewers)
+
+```
+
+
+
+
+
+
+
 
 
 
