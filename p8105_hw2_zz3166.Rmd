@@ -177,6 +177,10 @@ total_cig_butts_gwynnda
 # Import and Clean bakers.csv:
 bakers <- read_csv("data/bakers.csv") %>%
   janitor::clean_names()
+  # Rename the 'baker_name' column to 'baker'
+bakers <- bakers %>%
+  rename(baker = baker_name)
+
 
 # Check the data structure
 glimpse(bakers)
@@ -191,25 +195,53 @@ glimpse(bakes)
 #import and Clean results.csv:
 results <- read_csv("data/results.csv") %>%
   janitor::clean_names()
+# Re-read the results dataset, skipping the metadata rows
+results <- read_csv("data/results.csv", skip = 2) %>%
+  janitor::clean_names()
 
 # Check the data structure
 glimpse(results)
 
-#Import and Clean viewers.csv:
-viewers <- read_csv("data/viewers.csv") %>%
-  janitor::clean_names()
+```
 
-# Check the data structure
-glimpse(viewers)
+```{r}
+# Check column names of each dataset
+colnames(bakers)
+colnames(bakes)
+colnames(results)
 
 ```
 
 
+```{r}
+# Check bakers in bakes but not in bakers
+missing_bakers_in_bakes <- bakes %>%
+  select(baker) %>%
+  distinct() %>%
+  anti_join(bakers, by = "baker")
+
+# Check bakers in results but not in bakers
+missing_bakers_in_results <- results %>%
+  select(baker) %>%
+  distinct() %>%
+  anti_join(bakers, by = "baker")
+
+# View the results
+missing_bakers_in_bakes
+missing_bakers_in_results
+
+```
 
 
+```{r}
+# Merge bakes and bakers datasets
+combined_data <- left_join(bakes, bakers, by = "baker")
 
+```
 
+```{r}
 
+```
 
 
 
