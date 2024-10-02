@@ -2,29 +2,122 @@
 title: "p8105_hw2_zz3166"
 author: "Zihan Zhao"
 date: "2024-10-02"
-output: html_document
+output: github_document
 ---
+
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-## R Markdown
+### Problem 0
 
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
-
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
-
-```{r cars}
-summary(cars)
+```{r load_libraries}
+library(tidyverse)
+library(readxl)
 ```
 
-## Including Plots
+### Problem 1
 
-You can also embed plots, for example:
+Data Import and Cleaning
 
-```{r pressure, echo=FALSE}
-plot(pressure)
+We begin by importing the NYC Transit Subway Entrance and Exit data from the CSV file located in the data directory. We clean the variable names for consistency and select the variables relevant to our analysis. Additionally, we convert the entry variable from character ("YES"/"NO") to a logical (TRUE/FALSE) type.
+
+```{r}
+library(tidyverse)
+library(readr)
+library(janitor)
+
+trans_ent = 
+  read_csv(
+    "data/NYC_Transit_Subway_Entrance_And_Exit_Data.csv",
+    col_types = cols(Route8 = "c", Route9 = "c", Route10 = "c", Route11 = "c")) |> 
+  janitor::clean_names() |> 
+  select(
+    line, station_name, station_latitude, station_longitude, 
+    starts_with("route"), entry, exit_only, vending, entrance_type, 
+    ada) |> 
+  mutate(entry = ifelse(entry == "YES", TRUE, FALSE))
 ```
 
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+Dataset Description
+
+The cleaned dataset contains information about subway station entrances and exits in New York City. It includes the following variables:
+
+- **line**: Subway line where the station is located.
+- **station_name**: Name of the station.
+- **station_latitude** and **station_longitude**: Geographic coordinates of the station.
+- **route1** to **route11**: Subway routes that serve the station.
+- **entry**: Logical indicator of whether the entrance allows entry (`TRUE`) or not (`FALSE`).
+- **vending**: Indicates if there are vending machines (`YES`/`NO`).
+- **entrance_type**: Type of the entrance (e.g., `STAIR`, `ELEVATOR`).
+- **ada**: Logical indicator of ADA compliance (`TRUE` if compliant).
+
+
+```{r}
+trans_ent |> 
+  select(station_name, line) |> 
+  distinct()
+```
+- **Answer**: There are **465** distinct stations in the street.
+
+```{r}
+trans_ent |> 
+  filter(ada == TRUE) |> 
+  select(station_name, line) |> 
+  distinct()
+```
+- **Answer**: There are **84** ADA compliant stations.
+
+```{r}
+trans_ent |> 
+  filter(vending == "NO") |> 
+  pull(entry) |> 
+  mean()
+```
+
+- **Answer**: Approximately **0.377** (37.7%) of station entrances/exits without vending allow entry.
+
+
+Stations serving the A train and ADA Compliance
+
+```{r}
+trans_ent |> 
+  pivot_longer(
+    route1:route11,
+    names_to = "route_num",
+    values_to = "route") |> 
+  filter(route == "A") |> 
+  select(station_name, line) |> 
+  distinct()
+```
+
+- **Answer**:There are **60** distinct stations that serve the A train.
+
+```{r}
+trans_ent |> 
+  pivot_longer(
+    route1:route11,
+    names_to = "route_num",
+    values_to = "route") |> 
+  filter(route == "A", ada == TRUE) |> 
+  select(station_name, line) |> 
+  distinct()
+```
+
+- **Answer**: There are **17** ADA compliant stations that serve the A train.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
