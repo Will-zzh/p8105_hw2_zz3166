@@ -221,14 +221,13 @@ final_dataset <-
 
 ```
 
+
 ```{r}
 # Export the final dataset
 write_csv(final_dataset, "data/final_bakeoff_dataset.csv")
 
 ```
  
- 
-
 
 
 
