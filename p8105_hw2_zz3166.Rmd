@@ -109,16 +109,18 @@ trans_ent |>
 
 ### Problem 2
 
+Import `Mr_Trashwheel` dataset. 
 ```{r}
-Mr_Trashwheel = read_excel("data/202409 Trash Wheel Collection Data.xlsx", sheet = 1, skip = 1) |> 
+Mr_Trashwheel = read_excel("data/202409 Trash Wheel Collection Data.xlsx", sheet = "Mr. Trash Wheel", skip = 1) |> 
   janitor::clean_names() |> 
   filter(!is.na(dumpster)) |> 
   mutate(sports_balls = as.integer(round(sports_balls, 0)),
          source = "Mr. Trash Wheel")
 ```
 
+Import `Professor_Trashwheel` dataset. 
 ```{r}
-Professor_Trashwheel = read_excel("data/202409 Trash Wheel Collection Data.xlsx", sheet = 2, skip = 1) |> 
+Professor_Trashwheel = read_excel("data/202409 Trash Wheel Collection Data.xlsx", sheet = "Professor Trash Wheel", skip = 1) |> 
   janitor::clean_names() |> 
   filter(!is.na(dumpster)) |> 
   select(dumpster, month, year, date, weight_tons , volume_cubic_yards,
@@ -127,8 +129,9 @@ Professor_Trashwheel = read_excel("data/202409 Trash Wheel Collection Data.xlsx"
          source = "Professor Trash Wheel")
 ```
 
+Import `Gwynnda_Trashwheel` dataset. 
 ```{r}
-Gwynnda_Trashwheel = read_excel("data/202409 Trash Wheel Collection Data.xlsx", sheet = 4, skip = 1) |> 
+Gwynnda_Trashwheel = read_excel("data/202409 Trash Wheel Collection Data.xlsx", sheet = "Gwynnda Trash Wheel", skip = 1) |> 
   janitor::clean_names() |> 
   filter(!is.na(dumpster)) |> 
   select(dumpster, month, year, date, weight_tons, volume_cubic_yards,
@@ -140,9 +143,7 @@ Gwynnda_Trashwheel = read_excel("data/202409 Trash Wheel Collection Data.xlsx", 
 
 Combine all datasets into one tidy dataset
 ```{r}
-
 Combined_Trashwheel = bind_rows(Mr_Trashwheel, Professor_Trashwheel, Gwynnda_Trashwheel)
-
 glimpse(Combined_Trashwheel)
 
 ```
@@ -150,7 +151,6 @@ glimpse(Combined_Trashwheel)
 
 Total weight of trash collected by Professor Trash Wheel
 ```{r}
-
 total_weight_professor = Combined_Trashwheel |> 
   filter(source == "Professor Trash Wheel") |> 
   summarise(Total_Weight_Tons = sum(weight_tons, na.rm = TRUE))
@@ -168,78 +168,62 @@ total_cig_butts_gwynnda = Combined_Trashwheel |>
 total_cig_butts_gwynnda
 ```
 
-"The combined dataset has `r nrow(Combined_Trashwheel)` observations. It includes key variables like total weight of trash (`weight_tons`), number of plastic bottles (`plastic_bottles`), and cigarette butts (`cigarette_butts`). The total weight of trash collected by Professor Trash Wheel is `r format(total_weight_professor$Total_Weight_Tons, scientific = FALSE)` tons. Gwynnda collected `r format(total_cig_butts_gwynnda$Total_Cigarette_Butts, scientific = FALSE)` cigarette butts in June 2022."
+
+"The combined dataset has **`r nrow(Combined_Trashwheel)`** observations. It includes key variables like total weight of trash (`weight_tons`), number of plastic bottles (`plastic_bottles`), and cigarette butts (`cigarette_butts`). The total weight of trash collected by Professor Trash Wheel is **`r format(total_weight_professor$Total_Weight_Tons, scientific = FALSE)`** tons. Gwynnda collected **`r format(total_cig_butts_gwynnda$Total_Cigarette_Butts, scientific = FALSE)`** cigarette butts in June 2022."
 
 
 ### Problem 3
 
 ```{r}
-# Import and Clean bakers.csv:
-bakers <- read_csv("data/bakers.csv") %>%
-  janitor::clean_names()
-  # Rename the 'baker_name' column to 'baker'
-bakers <- bakers %>%
-  rename(baker = baker_name)
-
-
-# Check the data structure
-glimpse(bakers)
-
-#Import and Clean bakes.csv:
-bakes <- read_csv("data/bakes.csv") %>%
-  janitor::clean_names()
-
-# Check the data structure
-glimpse(bakes)
-
-#import and Clean results.csv:
-results <- read_csv("data/results.csv") %>%
-  janitor::clean_names()
-# Re-read the results dataset, skipping the metadata rows
-results <- read_csv("data/results.csv", skip = 2) %>%
-  janitor::clean_names()
-
-# Check the data structure
-glimpse(results)
+bakers_df <- 
+  read_csv("data/bakers.csv", na = c("NA", "", ".", "N/A")) |> 
+  janitor::clean_names() |> 
+  separate(baker_name, into = c("baker", "baker_last_name"), sep = " ") |> 
+  arrange(series)
 
 ```
 
 ```{r}
-# Check column names of each dataset
-colnames(bakers)
-colnames(bakes)
-colnames(results)
+bakes_df <- 
+  read_csv("data/bakes.csv", na = c("NA", "", ".", "N/A")) |> 
+  janitor::clean_names() |> 
+  mutate(baker = str_replace_all(baker, '"Jo"', "Jo"))
+
+```
+
+```{r}
+results_df <- 
+  read_csv("data/results.csv", na = c("NA", "", ".", "N/A"), skip = 2) |> 
+  janitor::clean_names() |> 
+  mutate(baker = if_else(baker == "Joanne", "Jo", baker))
+
+```
+
+
+
+```{r}
+# Check for discrepancies
+missing_bakes_df <- anti_join(bakers_df, bakes_df)
+missing_results_df <- anti_join(bakers_df, results_df, by = "baker")
 
 ```
 
 
 ```{r}
-# Check bakers in bakes but not in bakers
-missing_bakers_in_bakes <- bakes %>%
-  select(baker) %>%
-  distinct() %>%
-  anti_join(bakers, by = "baker")
+# Join the bakes and results datasets
+results_and_bakes_df <- 
+  left_join(bakes_df, results_df, by = c("baker", "series", "episode"))
 
-# Check bakers in results but not in bakers
-missing_bakers_in_results <- results %>%
-  select(baker) %>%
-  distinct() %>%
-  anti_join(bakers, by = "baker")
-
-# View the results
-missing_bakers_in_bakes
-missing_bakers_in_results
-
-```
-
-
-```{r}
-# Merge bakes and bakers datasets
-combined_data <- left_join(bakes, bakers, by = "baker")
+# Join with the bakers dataset
+final_dataset <- 
+  left_join(results_and_bakes_df, bakers_df, by = c("baker", "series")) |> 
+  relocate(series, episode, baker, baker_last_name, baker_age, baker_occupation, hometown)
 
 ```
 
 ```{r}
+# Export the final dataset
+write_csv(final_dataset, "data/final_bakeoff_dataset.csv")
 
 ```
 
