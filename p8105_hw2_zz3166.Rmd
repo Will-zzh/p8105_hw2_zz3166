@@ -16,6 +16,8 @@ knitr::opts_chunk$set(echo = TRUE)
 library(tidyverse)
 library(readxl)
 library(dplyr)
+library(readr)
+library(janitor)
 ```
 
 ### Problem 1
@@ -23,9 +25,6 @@ library(dplyr)
 Data Import and Cleaning
 
 ```{r}
-library(tidyverse)
-library(readr)
-library(janitor)
 
 trans_ent = 
   read_csv(
