@@ -109,6 +109,9 @@ trans_ent |>
 
 ### Problem 2
 
+Step 1: Import and Clean the Data
+
+
 Import `Mr_Trashwheel` dataset. 
 ```{r}
 Mr_Trashwheel = read_excel("data/202409 Trash Wheel Collection Data.xlsx", sheet = "Mr. Trash Wheel", skip = 1) |> 
@@ -141,7 +144,7 @@ Gwynnda_Trashwheel = read_excel("data/202409 Trash Wheel Collection Data.xlsx", 
 ```
 
 
-Combine all datasets into one tidy dataset
+Step 2: Combine the datasets.
 ```{r}
 Combined_Trashwheel = bind_rows(Mr_Trashwheel, Professor_Trashwheel, Gwynnda_Trashwheel)
 glimpse(Combined_Trashwheel)
@@ -149,7 +152,7 @@ glimpse(Combined_Trashwheel)
 ```
 
 
-Total weight of trash collected by Professor Trash Wheel
+Step 3: Calculate Total weight of trash collected by Professor Trash Wheel
 ```{r}
 total_weight_professor = Combined_Trashwheel |> 
   filter(source == "Professor Trash Wheel") |> 
@@ -159,7 +162,7 @@ total_weight_professor
 ```
 
 
-Total cigarette butts collected by Gwynnda in June 2022
+Step 4: Calculate Total cigarette butts collected by Gwynnda in June 2022
 ```{r}
 
 total_cig_butts_gwynnda = Combined_Trashwheel |> 
@@ -169,12 +172,18 @@ total_cig_butts_gwynnda
 ```
 
 
-"The combined dataset has **`r nrow(Combined_Trashwheel)`** observations. It includes key variables like total weight of trash (`weight_tons`), number of plastic bottles (`plastic_bottles`), and cigarette butts (`cigarette_butts`). The total weight of trash collected by Professor Trash Wheel is **`r format(total_weight_professor$Total_Weight_Tons, scientific = FALSE)`** tons. Gwynnda collected **`r format(total_cig_butts_gwynnda$Total_Cigarette_Butts, scientific = FALSE)`** cigarette butts in June 2022."
+- **Summary**: "The combined dataset has **`r nrow(Combined_Trashwheel)`** observations. It includes key variables like total weight of trash (`weight_tons`), number of plastic bottles (`plastic_bottles`), and cigarette butts (`cigarette_butts`). The total weight of trash collected by Professor Trash Wheel is **`r format(total_weight_professor$Total_Weight_Tons, scientific = FALSE)`** tons. Gwynnda collected **`r format(total_cig_butts_gwynnda$Total_Cigarette_Butts, scientific = FALSE)`** cigarette butts in June 2022."
 
 
 ### Problem 3
 
+This problem analyzes data on bakers, their bakes, and results from Seasons 1 through 10 of the Great British Bake Off. The goal is to clean and merge datasets from bakers, bakes, and results, and analyze key outcomes such as "Star Baker" and viewership trends.
+
+Step 1 : Data Import and Cleaning
+
+We begin by importing and cleaning the `bakers.csv`, `bakes.csv`, and `results.csv` files.
 ```{r}
+# Import and clean bakers dataset
 bakers <- 
   read_csv("data/bakers.csv", na = c("NA", "", ".", "N/A")) |> 
   janitor::clean_names() |> 
@@ -183,7 +192,10 @@ bakers <-
 
 ```
 
+- **Description**: The `bakers.csv` file contains information about the bakers (e.g., name, age, occupation). We split the baker's full name into first and last names for clarity.
+
 ```{r}
+# Import and clean bakes dataset
 bakes <- 
   read_csv("data/bakes.csv", na = c("NA", "", ".", "N/A")) |> 
   janitor::clean_names() |> 
@@ -191,23 +203,38 @@ bakes <-
 
 ```
 
+- **Description**: The `bakes.csv` file provides details about each baker's performance in signature bakes and show stoppers. We fix a specific name inconsistency (`"Jo"`).
+
 ```{r}
+# Import and clean results dataset
 results <- 
   read_csv("data/results.csv", na = c("NA", "", ".", "N/A"), skip = 2) |> 
   janitor::clean_names() |> 
   mutate(baker = if_else(baker == "Joanne", "Jo", baker))
 
 ```
+- **Description**: The `results.csv` file contains the outcome of each episode, such as the technical challenge ranking and whether a baker was eliminated or named Star Baker. We address a naming issue where "Joanne" is renamed to "Jo" for consistency.
 
 
+Step 2: Checking for Discrepancies
 
+Before merging, we check for any bakers in the `bakes` and `results` datasets that are missing from the `bakers` dataset.
 ```{r}
 # Check for discrepancies
 missing_bakes <- anti_join(bakers, bakes)
 missing_results <- anti_join(bakers, results, by = "baker")
 
+# Display any discrepancies
+missing_bakes
+missing_results
+
 ```
 
+- **Description**: Description: We use `anti_join()` to identify any bakers present in the `bakes` or `results` datasets but missing from the `bakers` dataset. Addressing these discrepancies is crucial for a successful merge.
+
+Step 3: Joing the Datasets
+
+Once discrepancies are resolved, we join the three datasets to create a comprehensive dataset for analysis.
 
 ```{r}
 # Join the bakes and results datasets
@@ -219,27 +246,29 @@ final_dataset <-
   left_join(results_and_bakes, bakers, by = c("baker", "series")) |> 
   relocate(series, episode, baker, baker_last_name, baker_age, baker_occupation, hometown)
 
-```
-
-
-```{r}
 # Export the final dataset
 write_csv(final_dataset, "data/final_bakeoff_dataset.csv")
 
 ```
 
+- **Description**: We first join the `bakes` and `results` datasets by `baker`, `series`, and `episode`, then join this combined dataset with the `bakers` dataset. This gives us a complete dataset with baker details, performance data, and results for each episode.
+
+- **Final Table Summary**: The final dataset serves as a complete, organized resource for analyzing the performance of bakers throughout the Great British Bake Off. With it, we can investigate trends like consistency in winning Star Baker, compare performance across series, and understand how individual bakers performed in different challenges. This dataset also allows for further exploratory analysis, such as predicting results based on performance metrics or identifying bakers with consistent success.
 
 
+Step 4: Analysis of Winners (Seasons 5-10)
+
+Next, we filter the results to focus on Star Bakers and Winners from Seasons 5 through 10, and create a readable table.
 
 ```{r}
-#Filter for Seasons 5 to 10 and Specific Results
+#Filter for Star Bakers and Winners in Seasons 5-10
 winners <- 
   results |> 
   filter(series <= 10, series >= 5) |> 
   filter(result %in% c("WINNER", "STAR BAKER")) |> 
   select(series, episode, baker, result)
 
-#Pivot the Data to Show Results by Series
+#Create a table showing winners by episode for each series
 winners |> 
   pivot_wider(
     names_from = series,   # Create columns for each series (5-10)
@@ -250,28 +279,43 @@ winners |>
 
 ```
 
+- **Description**: We filter the data to focus on Star Bakers and Winners from Seasons 5 to 10 and then use `pivot_wider()` to display the winners by episode for each series. The table is formatted using `knitr::kable()`. 
+
+- **Observation**:
+
+ - **Richard** from Season 5 stands out, winning the Star Baker title multiple times.
+ - **Nadiya** from Season 6 had a strong performance, particularly toward the later episodes.
+ - In Season 10, **Steph** won Star Baker in multiple episodes.
+
+This information gives insight into the most consistent and high-performing bakers over multiple episodes.
 
 
-Viewership Data
+Step 5: Viewership Data
 
-Import the views dataset
+We now analyze the viewership data from the `viewers.csv` file.
+
 ```{r viewers_data}
-# read data and display first 10 rows
+# import data and display the first 10 rows of viewship data
 viewers = read_csv('data/viewers.csv') |>
   janitor::clean_names()
-head(viewers, 10)
-```
 
-Show the first 10 rows of the viewership data
-```{r}
 viewers |> 
   head(10) |> 
   knitr::kable()  # Optional: Use knitr::kable() for table formatting
 
 ```
 
+-**Description**: This table shows the viewership (in millions) for episodes across different series (1 to 10). The columns represent each series, and the rows represent the episode number.
 
-- average viewership of series 1: `r mean(pull(viewers, series_1), na.rm=TRUE)`
+-**Observation**:
 
-- average viewership of series 5: `r mean(pull(viewers, series_5), na.rm=TRUE)`
+- **Series 5 to 10** show generally higher viewership numbers compared to the earlier series (1 to 4), with viewership peaking in Series 7, Episode 10 at **15.90 million**.
+- **Series 7 and Series 6** also had strong viewership, with several episodes drawing more than **13 million** viewers.
+
+
+Step 6: Average Viewership for Series 1 and 5
+
+- average viewership of series 1: **`r mean(pull(viewers, series_1), na.rm=TRUE)`**
+
+- average viewership of series 5: **`r mean(pull(viewers, series_5), na.rm=TRUE)`**
 
